@@ -1,0 +1,95 @@
+Polaris principal: dev | step: dev_after
+fs.s3.impl: org.apache.hadoop.fs.s3a.S3AFileSystem
+
+===== Snapshots of silver.orders after the failed INSERT of the analyst =====
+>>> SELECT snapshot_id, operation, committed_at FROM polaris.silver.orders.snapshots
++-------------------+---------+-----------------------+
+|snapshot_id        |operation|committed_at           |
++-------------------+---------+-----------------------+
+|8283131058517466250|overwrite|2026-11-08 17:56:33.326|
+|8812627563475343072|overwrite|2026-11-08 21:33:56.369|
+|3663179877117207480|append   |2026-11-08 21:38:22.524|
++-------------------+---------+-----------------------+
+
+>>> SELECT count(*) AS orders FROM polaris.silver.orders
++------+
+|orders|
++------+
+|2830  |
++------+
+
+
+===== Exercise 1: remove the country column =====
+>>> SELECT snapshot_id, operation FROM polaris.silver.users.snapshots
++-------------------+---------+
+|snapshot_id        |operation|
++-------------------+---------+
+|9056757185399142284|overwrite|
++-------------------+---------+
+
+>>> ALTER TABLE polaris.silver.users DROP COLUMN country
+++
+||
+++
+++
+
+>>> DESCRIBE polaris.silver.users
++---------+---------+-------+
+|col_name |data_type|comment|
++---------+---------+-------+
+|user_id  |string   |NULL   |
+|username |string   |NULL   |
+|name     |string   |NULL   |
+|sex      |string   |NULL   |
+|email    |string   |NULL   |
+|birthdate|date     |NULL   |
+|street   |string   |NULL   |
+|city     |string   |NULL   |
+|state    |string   |NULL   |
+|zip_code |string   |NULL   |
++---------+---------+-------+
+
+>>> SELECT snapshot_id, operation FROM polaris.silver.users.snapshots
++-------------------+---------+
+|snapshot_id        |operation|
++-------------------+---------+
+|9056757185399142284|overwrite|
++-------------------+---------+
+
+>>> SELECT timestamp, file FROM polaris.silver.users.metadata_log_entries
++-----------------------+---------------------------------------------------------------------------------------------------------------+
+|timestamp              |file                                                                                                           |
++-----------------------+---------------------------------------------------------------------------------------------------------------+
+|2026-11-08 22:12:51.306|s3://user-a-chaoui-ece/warehouse/silver/users/metadata/00000-42269e62-ecb1-470c-8dc8-30423d6cd92b.metadata.json|
+|2026-11-08 22:16:08.607|s3://user-a-chaoui-ece/warehouse/silver/users/metadata/00001-3ae79818-79fd-483c-a504-faf1976f498f.metadata.json|
+|2026-11-08 22:22:27.922|s3://user-a-chaoui-ece/warehouse/silver/users/metadata/00002-f3d545c0-67aa-46e0-8ba8-b8d0d6a926a8.metadata.json|
++-----------------------+---------------------------------------------------------------------------------------------------------------+
+
+
+===== Exercise 2: gold namespace created by dev =====
+>>> CREATE NAMESPACE IF NOT EXISTS polaris.gold
+++
+||
+++
+++
+
+>>> CREATE TABLE IF NOT EXISTS polaris.gold.orders_per_product AS SELECT product, count(*) AS orders, sum(quantity) AS quantity FROM polaris.silver.orders GROUP BY product
+++
+||
+++
+++
+
+>>> SELECT * FROM polaris.gold.orders_per_product ORDER BY orders DESC
++---------+------+--------+
+|product  |orders|quantity|
++---------+------+--------+
+|croissant|492   |1524    |
+|drink    |484   |1493    |
+|brioche  |468   |1424    |
+|cookie   |466   |1365    |
+|donut    |462   |1390    |
+|bread    |458   |1420    |
++---------+------+--------+
+
+
+DONE

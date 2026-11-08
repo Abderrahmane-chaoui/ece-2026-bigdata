@@ -1,0 +1,93 @@
+Polaris principal: dev | step: dev
+fs.s3.impl: org.apache.hadoop.fs.s3a.S3AFileSystem
+
+===== Both catalogs are reachable =====
+>>> SHOW NAMESPACES IN lab
++---------+
+|namespace|
++---------+
+|silver   |
++---------+
+
+>>> SHOW NAMESPACES IN polaris
++---------+
+|namespace|
++---------+
+|silver   |
++---------+
+
+
+===== Register the silver table in Polaris =====
+>>> CREATE NAMESPACE IF NOT EXISTS polaris.silver
+++
+||
+++
+++
+
+silver.orders is already registered (previous run)
+>>> SELECT count(*) AS orders FROM polaris.silver.orders
++------+
+|orders|
++------+
+|2830  |
++------+
+
+
+===== Create tables as dev =====
+>>> SHOW TABLES IN polaris.silver
++---------+---------+-----------+
+|namespace|tableName|isTemporary|
++---------+---------+-----------+
+|silver   |users    |false      |
+|silver   |orders   |false      |
++---------+---------+-----------+
+
+>>> SELECT snapshot_id, operation, committed_at FROM polaris.silver.orders.snapshots
++-------------------+---------+-----------------------+
+|snapshot_id        |operation|committed_at           |
++-------------------+---------+-----------------------+
+|8283131058517466250|overwrite|2026-11-08 17:56:33.326|
+|8812627563475343072|overwrite|2026-11-08 21:33:56.369|
+|3663179877117207480|append   |2026-11-08 21:38:22.524|
++-------------------+---------+-----------------------+
+
+>>> SELECT count(*) AS users FROM polaris.silver.users
++-----+
+|users|
++-----+
+|50   |
++-----+
+
+>>> SELECT file_path FROM polaris.silver.users.files
++---------------------------------------------------------------------------------------------------------------+
+|file_path                                                                                                      |
++---------------------------------------------------------------------------------------------------------------+
+|s3://user-a-chaoui-ece/warehouse/silver/users/data/00000-3-bfe6ad5d-6248-4f7d-b13e-88250f61d244-0-00001.parquet|
++---------------------------------------------------------------------------------------------------------------+
+
+
+===== Schema change as dev =====
+>>> ALTER TABLE polaris.silver.users ADD COLUMN country STRING
+++
+||
+++
+++
+
+>>> DESCRIBE polaris.silver.users
++---------+---------+-------+
+|col_name |data_type|comment|
++---------+---------+-------+
+|user_id  |string   |NULL   |
+|username |string   |NULL   |
+|name     |string   |NULL   |
+|sex      |string   |NULL   |
+|email    |string   |NULL   |
+|birthdate|date     |NULL   |
+|street   |string   |NULL   |
+|city     |string   |NULL   |
+|state    |string   |NULL   |
+|zip_code |string   |NULL   |
+|country  |string   |NULL   |
++---------+---------+-------+
+
+>>> SELECT timestamp, file FROM polaris.silver.users.metadata_log_entries

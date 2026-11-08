@@ -1,0 +1,38 @@
+Polaris principal: analyst | step: analyst
+fs.s3.impl: org.apache.hadoop.fs.s3a.S3AFileSystem
+
+===== Read as the analyst =====
+>>> SHOW TABLES IN polaris.silver
++---------+---------+-----------+
+|namespace|tableName|isTemporary|
++---------+---------+-----------+
+|silver   |users    |false      |
+|silver   |orders   |false      |
++---------+---------+-----------+
+
+>>> SELECT product, count(*) FROM polaris.silver.orders GROUP BY product
++---------+--------+
+|product  |count(1)|
++---------+--------+
+|cookie   |466     |
+|drink    |484     |
+|donut    |462     |
+|croissant|492     |
+|bread    |458     |
+|brioche  |468     |
++---------+--------+
+
+
+===== Write as the analyst (must be refused) =====
+>>> INSERT INTO polaris.silver.orders SELECT * FROM polaris.silver.orders LIMIT 1
+22:26:30.268 [Thread-5] ERROR org.apache.spark.sql.execution.datasources.v2.AppendDataExec - Data source write support IcebergBatchWrite(table=polaris.silver.orders, format=PARQUET) is aborting.
+22:26:30.379 [Thread-5] ERROR org.apache.spark.sql.execution.datasources.v2.AppendDataExec - Data source write support IcebergBatchWrite(table=polaris.silver.orders, format=PARQUET) aborted.
+-> FAILED: Py4JJavaError
+    : org.apache.iceberg.exceptions.ForbiddenException: Forbidden: Principal 'analyst' with activated PrincipalRoles '[data_analyst]' and activated grants via '[data_analyst, catalog_reader]' is not authorized for op ADD_TABLE_SNAPSHOT
+    Suppressed: org.apache.spark.util.Utils$OriginalTryStackTraceException: Full stacktrace of original doTryWithCallerStacktrace caller
+>>> ALTER TABLE polaris.silver.users ADD COLUMN phone STRING
+-> FAILED: Py4JJavaError
+    : org.apache.iceberg.exceptions.ForbiddenException: Forbidden: Principal 'analyst' with activated PrincipalRoles '[data_analyst]' and activated grants via '[data_analyst, catalog_reader]' is not authorized for op ADD_TABLE_SCHEMA
+    Suppressed: org.apache.spark.util.Utils$OriginalTryStackTraceException: Full stacktrace of original doTryWithCallerStacktrace caller
+
+DONE

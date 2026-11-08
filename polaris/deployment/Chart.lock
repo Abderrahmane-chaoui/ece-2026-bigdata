@@ -1,0 +1,9 @@
+dependencies:
+- name: polaris
+  repository: https://downloads.apache.org/polaris/helm-chart
+  version: 1.8.0
+- name: postgresql
+  repository: oci://registry-1.docker.io/bitnamicharts
+  version: 18.12.15
+digest: sha256:f645ffb1c9266113248b4e03eae92f01f96d5f9037f0783058ce59ad50fa4189
+generated: "2026-11-08T22:05:39.578629273Z"

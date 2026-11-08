@@ -11,3 +11,5 @@ logs/
 *.duckdb
 warehouse/**/data/
 spark_lab/*.log
+polaris_lab/*.log
+polaris/deployment/charts/

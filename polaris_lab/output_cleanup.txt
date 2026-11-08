@@ -1,0 +1,31 @@
+Polaris principal: dev | step: cleanup
+fs.s3.impl: org.apache.hadoop.fs.s3a.S3AFileSystem
+
+===== Cleanup =====
+>>> DROP TABLE IF EXISTS polaris.silver.users
+++
+||
+++
+++
+
+>>> DROP TABLE IF EXISTS polaris.gold.orders_per_product
+++
+||
+++
+++
+
+>>> DROP NAMESPACE IF EXISTS polaris.gold
+++
+||
+++
+++
+
+>>> SHOW TABLES IN polaris.silver
++---------+---------+-----------+
+|namespace|tableName|isTemporary|
++---------+---------+-----------+
+|silver   |orders   |false      |
++---------+---------+-----------+
+
+
+DONE

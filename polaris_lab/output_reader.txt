@@ -1,0 +1,32 @@
+Polaris principal: silver_analyst | step: reader
+fs.s3.impl: org.apache.hadoop.fs.s3a.S3AFileSystem
+
+===== Exercise 2: principal with silver_reader only =====
+>>> SELECT count(*) AS orders FROM polaris.silver.orders
++------+
+|orders|
++------+
+|2830  |
++------+
+
+-> SUCCEEDED
+>>> SELECT count(*) AS users FROM polaris.silver.users
++-----+
+|users|
++-----+
+|50   |
++-----+
+
+-> SUCCEEDED
+>>> SELECT * FROM polaris.gold.orders_per_product
+-> FAILED: Py4JJavaError
+    : org.apache.iceberg.exceptions.ForbiddenException: Forbidden: Principal 'silver_analyst' with activated PrincipalRoles '[silver_reader_role]' and activated grants via '[silver_reader_role, silver_reader]' is not authorized for op LOAD_TABLE
+    Suppressed: org.apache.spark.util.Utils$OriginalTryStackTraceException: Full stacktrace of original doTryWithCallerStacktrace caller
+>>> INSERT INTO polaris.silver.orders SELECT * FROM polaris.silver.orders LIMIT 1
+22:25:54.672 [Thread-5] ERROR org.apache.spark.sql.execution.datasources.v2.AppendDataExec - Data source write support IcebergBatchWrite(table=polaris.silver.orders, format=PARQUET) is aborting.
+22:25:54.741 [Thread-5] ERROR org.apache.spark.sql.execution.datasources.v2.AppendDataExec - Data source write support IcebergBatchWrite(table=polaris.silver.orders, format=PARQUET) aborted.
+-> FAILED: Py4JJavaError
+    : org.apache.iceberg.exceptions.ForbiddenException: Forbidden: Principal 'silver_analyst' with activated PrincipalRoles '[silver_reader_role]' and activated grants via '[silver_reader_role, silver_reader]' is not authorized for op ADD_TABLE_SNAPSHOT
+    Suppressed: org.apache.spark.util.Utils$OriginalTryStackTraceException: Full stacktrace of original doTryWithCallerStacktrace caller
+
+DONE

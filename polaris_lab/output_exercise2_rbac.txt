@@ -1,0 +1,16 @@
+== catalog role silver_reader
+201
+NAMESPACE_READ_PROPERTIES 201
+TABLE_LIST 201
+TABLE_READ_PROPERTIES 201
+TABLE_READ_DATA 201
+{"namespace":["silver"],"privilege":"NAMESPACE_READ_PROPERTIES","type":"namespace"}
+{"namespace":["silver"],"privilege":"TABLE_LIST","type":"namespace"}
+{"namespace":["silver"],"privilege":"TABLE_READ_PROPERTIES","type":"namespace"}
+{"namespace":["silver"],"privilege":"TABLE_READ_DATA","type":"namespace"}
+== principal role silver_reader_role -> silver_reader
+201
+201
+== principal silver_analyst -> silver_reader_role
+201
+["silver_reader_role"]
