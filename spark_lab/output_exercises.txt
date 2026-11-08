@@ -1,0 +1,42 @@
+<pyspark.sql.session.SparkSession object at 0x7c60c6e4b8c0> Spark 4.1.1
+silver: 50 users, 2829 orders
+
+===== Exercise 1: birthdate_is_valid (DataFrame API and Spark SQL) =====
++------------------+-----+
+|birthdate_is_valid|count|
++------------------+-----+
+|              true|   45|
+|             false|    5|
++------------------+-----+
+
+Rows that differ between DataFrame and SQL: 0
+
+===== Exercise 2: zip_code with regexp_extract, Python UDF and pandas_udf =====
+regexp_extract      391.7 ms per run
+python udf          883.4 ms per run
+pandas_udf          553.8 ms per run
+Same results: True
+
+===== Exercise 3: cache the bronze DataFrames =====
+without cache     665.8 ms per run
+with cache        414.5 ms per run
+
+===== Exercise 4: append to Iceberg and time travel =====
++-------------------+---------+-----------------------+
+|snapshot_id        |operation|committed_at           |
++-------------------+---------+-----------------------+
+|8283131058517466250|overwrite|2026-11-08 17:56:33.326|
+|8812627563475343072|overwrite|2026-11-08 21:33:56.369|
+|3663179877117207480|append   |2026-11-08 21:38:22.524|
++-------------------+---------+-----------------------+
+
+Current orders: 2830
++--------------------+
+|orders_before_append|
++--------------------+
+|                2829|
++--------------------+
+
+A Parquet directory keeps no snapshot: the previous state cannot be read back.
+
+DONE

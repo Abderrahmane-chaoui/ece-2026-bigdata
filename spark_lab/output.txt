@@ -1,0 +1,114 @@
+<pyspark.sql.session.SparkSession object at 0x751a0126bb60> Spark 4.1.1
+
+===== Bronze layer =====
+root
+ |-- uuid: string (nullable = true)
+ |-- username: string (nullable = true)
+ |-- name: string (nullable = true)
+ |-- sex: string (nullable = true)
+ |-- address: string (nullable = true)
+ |-- mail: string (nullable = true)
+ |-- birthdate: date (nullable = true)
+
++------------------------------------+--------------+--------------+---+---------------------------------------------+-----------------------+----------+
+|uuid                                |username      |name          |sex|address                                      |mail                   |birthdate |
++------------------------------------+--------------+--------------+---+---------------------------------------------+-----------------------+----------+
+|bdd640fb-0667-4ad1-9c80-317fa3b1799d|garzaanthony  |Charles Garcia|M  |908 Jennifer Squares\nRobinsonshire, KY 01352|helenpeterson@gmail.com|1935-09-30|
+|17be3111-1a2a-43ed-962b-0f79c37459ee|blairamanda   |Ryan Munoz    |M  |Unit 6184 Box 9593\nDPO AP 09617             |stanleykendra@gmail.com|2009-12-26|
+|47294739-614f-43d7-99db-3ad0ddd1dfb2|elizabethmiles|Jacob Wood    |M  |283 Steven Groves\nLake Mark, WI 07832       |lydiatrujillo@yahoo.com|1941-10-29|
++------------------------------------+--------------+--------------+---+---------------------------------------------+-----------------------+----------+
+only showing top 3 rows
++---------------------------------------------+
+|address                                      |
++---------------------------------------------+
+|908 Jennifer Squares\nRobinsonshire, KY 01352|
+|Unit 6184 Box 9593\nDPO AP 09617             |
+|283 Steven Groves\nLake Mark, WI 07832       |
++---------------------------------------------+
+only showing top 3 rows
+
+===== stg_users (DataFrame API) =====
++------------------------------------+--------------+------------------+---+-----------------------+----------+---------------------+--------------+-----+--------+
+|user_id                             |username      |name              |sex|email                  |birthdate |street               |city          |state|zip_code|
++------------------------------------+--------------+------------------+---+-----------------------+----------+---------------------+--------------+-----+--------+
+|bdd640fb-0667-4ad1-9c80-317fa3b1799d|garzaanthony  |Charles Garcia    |M  |helenpeterson@gmail.com|1935-09-30|908 Jennifer Squares |Robinsonshire |KY   |01352   |
+|17be3111-1a2a-43ed-962b-0f79c37459ee|blairamanda   |Ryan Munoz        |M  |stanleykendra@gmail.com|2009-12-26|Unit 6184 Box 9593   |NULL          |AP   |09617   |
+|47294739-614f-43d7-99db-3ad0ddd1dfb2|elizabethmiles|Jacob Wood        |M  |lydiatrujillo@yahoo.com|1941-10-29|283 Steven Groves    |Lake Mark     |WI   |07832   |
+|9132b63e-f162-47e4-a9c3-49e03602f8ac|ithomas       |Jonathan Wilkerson|M  |cruzcaitlin@yahoo.com  |1972-02-24|969 Cox Dam Suite 101|Lake Ernest   |TX   |55834   |
+|f143262f-dc5c-4eed-8da0-365bf89897b9|kayla51       |Ashley Dyer       |F  |georgetracy@gmail.com  |2018-07-18|0482 Monica Hills    |East Nathaniel|GA   |71198   |
++------------------------------------+--------------+------------------+---+-----------------------+----------+---------------------+--------------+-----+--------+
+only showing top 5 rows
+
+===== stg_orders (DataFrame API, window deduplication) =====
+Original: 2829
+With duplicates: 2832
++--------------------+-----+
+|            order_id|count|
++--------------------+-----+
+|2339ba19-2563-4cc...|    2|
+|41843b03-04dd-405...|    2|
+|b49e04cc-c243-49e...|    2|
++--------------------+-----+
+
+After deduplication: 2829
++--------+-----+
+|order_id|count|
++--------+-----+
++--------+-----+
+
+
+===== stg_orders (Spark SQL) =====
++--------------------+--------------------+--------------------+--------+---------+
+|            order_id|             user_id|          ordered_at|quantity|  product|
++--------------------+--------------------+--------------------+--------+---------+
+|00060d5a-02b3-494...|f53d4330-cdda-44b...|2020-01-28 12:31:...|       2|   cookie|
+|0011be30-e268-492...|5f733a3e-5d28-4aa...|2020-04-18 22:51:...|       5|    bread|
+|002394e2-2ad9-468...|90164161-cfa7-41c...|2020-02-24 01:03:...|       4|   cookie|
+|0041f5d4-9549-463...|aab612c9-415d-474...|2020-03-17 18:29:...|       2|croissant|
+|00684d9c-d2bf-4c3...|97fa7f04-8363-400...|2020-03-30 13:36:...|       4|    bread|
++--------------------+--------------------+--------------------+--------+---------+
+only showing top 5 rows
+DataFrame and SQL versions agree
++-----+-----+------------+
+|state|users|missing_city|
++-----+-----+------------+
+|   AE|    3|           3|
+|   FM|    3|           0|
+|   NJ|    2|           0|
+|   NM|    2|           0|
+|   AP|    2|           2|
+|   TX|    2|           0|
+|   VI|    2|           0|
+|   HI|    2|           0|
+|   DE|    2|           0|
+|   VT|    2|           0|
++-----+-----+------------+
+only showing top 10 rows
+
+===== Write the silver layer as Parquet =====
+Parquet: 50 users, 2829 orders
+
+===== Write the silver layer as Iceberg tables =====
++-------------------+---------+-----------------------+
+|snapshot_id        |operation|committed_at           |
++-------------------+---------+-----------------------+
+|8283131058517466250|overwrite|2026-11-08 17:56:33.326|
+|8812627563475343072|overwrite|2026-11-08 21:33:56.369|
++-------------------+---------+-----------------------+
+
++------------------------------------------------------------------------------------------------------------------+-----------+------------+------------------+
+|file_path                                                                                                         |file_format|record_count|file_size_in_bytes|
++------------------------------------------------------------------------------------------------------------------+-----------+------------+------------------+
+|s3a://user-a-chaoui-ece/warehouse/silver/orders/data/00000-64-00139553-f8a0-48a7-b12a-4e0175abd49a-0-00001.parquet|PARQUET    |2829        |84055             |
++------------------------------------------------------------------------------------------------------------------+-----------+------------+------------------+
+
+Iceberg: 50 users, 2829 orders
+
+===== Exercise 1: birthdate_is_valid (DataFrame API and Spark SQL) =====
++------------------+-----+
+|birthdate_is_valid|count|
++------------------+-----+
+|              true|   45|
+|             false|    5|
++------------------+-----+
+
