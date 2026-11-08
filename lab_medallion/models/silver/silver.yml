@@ -7,6 +7,11 @@ models:
         data_tests:
           - unique
           - not_null
+      - name: username_normalized
+        description: Username without leading or trailing whitespace, in lowercase. Used to compare usernames.
+        data_tests:
+          - unique
+          - not_null
       - name: email
         data_tests:
           - unique
@@ -16,6 +21,16 @@ models:
           - accepted_values:
               arguments:
                 values: ["F", "M"]
+      - name: birthdate
+        description: Birthdate of the user, NULL when it is later than the first order of the user.
+      - name: birthdate_is_valid
+        description: True when the original birthdate is not later than the first order of the user.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
+                quote: false
       - name: state
         description: Two letters code of the state, territory or military region.
         data_tests:
@@ -24,6 +39,10 @@ models:
               arguments:
                 to: ref('states')
                 field: code
+      - name: zip_code
+        description: Five digits ZIP code. Checked against the ranges of its state by assert_zip_code_matches_state.
+        data_tests:
+          - not_null
 
   - name: stg_orders
     description: One row per order, typed and deduplicated.
@@ -39,14 +58,20 @@ models:
               arguments:
                 to: ref('stg_users')
                 field: user_id
-      - name: quantity
+      - name: ordered_at
         data_tests:
+          - not_null
+      - name: quantity
+        description: Number of items, strictly positive (see assert_orders_quantity_positive).
+        data_tests:
+          - not_null
           - accepted_values:
               arguments:
                 values: [1, 2, 3, 4, 5]
                 quote: false
       - name: product
         data_tests:
+          - not_null
           - accepted_values:
               arguments:
                 values: ["bread", "brioche", "cookie", "croissant", "donut", "drink"]
